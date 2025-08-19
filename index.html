@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>sheddy.work — DevOps playground</title>
+  <meta name="description" content="sheddy.work — DevOps playground by Shedrack. Experiments in cloud, Kubernetes, CI/CD, and networking." />
+  <meta property="og:title" content="sheddy.work — DevOps playground" />
+  <meta property="og:description" content="Experiments in cloud, devops, Kubernetes, CI/CD, and networking." />
+  <meta property="og:type" content="website" />
+  <meta name="theme-color" content="#0d0d0d" />
+
+  <!-- Font: JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="wrap">
+    <section class="term" role="region" aria-label="Terminal window">
+      <div class="topbar" aria-hidden="true">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+        <span class="title">sheddy@work — bash</span>
+      </div>
+      <div class="screen" id="screen" aria-live="polite">
+        <noscript>
+          <div class="line">
+            <span class="prompt">$</span> whoami
+          </div>
+          <div class="line output">shedrack@sheddy.work</div>
+          <div class="line"><span class="prompt">$</span> echo "DevOps playground"</div>
+          <div class="line output">DevOps playground</div>
+          <div class="line"><span class="prompt">$</span> ls</div>
+          <div class="line output">
+            <div>no projects yet — check back soon</div>
+          </div>
+        </noscript>
+      </div>
+    </section>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px;">
+      <button id="refreshBtn" type="button" aria-label="Refresh project list" style="font-family:inherit; font-size:12px; padding:6px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.12); background:transparent; color:var(--fg); cursor:pointer;">
+        refresh <span aria-hidden="true">(r)</span>
+      </button>
+      <span id="updatedAt" style="font-size:12px; color:var(--muted);"></span>
+    </div>
+
+    <footer>
+      <span>GitHub: <a href="https://github.com/hacvktivist123" rel="me">@hacvktivist123</a></span>
+      <span class="sep">•</span>
+      <a href="https://sheddy.xyz" rel="me">Portfolio</a>
+    </footer>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
