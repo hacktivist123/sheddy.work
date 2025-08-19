@@ -1,4 +1,5 @@
 :root{ --bg:#0b0b0c; --muted:#7a7a7a; --fg:#eaeaea; --accent:#7ee787; --accent2:#79c0ff; --danger:#ff7b72; --shadow:rgba(0,0,0,.35); }
+    :root{ --prompt-indent: 2ch; }
     @media (prefers-color-scheme: light){ :root{ --bg:#f6f7f9; --fg:#111; --muted:#6b7280; --accent:#0a7c3a; --accent2:#0b6ddc; --danger:#c0352a; --shadow:rgba(0,0,0,.08);} }
     *{ box-sizing:border-box }
     html,body{ height:100% }
@@ -29,7 +30,11 @@
     .title{ margin-left:auto; font-weight:600; font-size:12px; color:var(--muted) }
 
     .screen{ padding:22px; min-height: 340px; }
-    .line{ white-space:pre-wrap; word-break:break-word; }
+    .line{ white-space: pre-line; word-break:break-word; }
+    .line.output{ padding-left: var(--prompt-indent); }
+    /* When JS is enabled, hide terminal lines until script reveals them */
+    .js .screen .line{ visibility:hidden }
+    .js .screen .line.revealed{ visibility:visible }
     .prompt{ color: var(--accent2); }
     .command{ color: var(--fg); }
     .output{ color: var(--fg); opacity:.9; }
@@ -37,6 +42,9 @@
     .cursor{ display:inline-block; width:10px; background:var(--fg); margin-left:2px; }
     .blink{ animation: blink 1s steps(1,end) infinite; }
     @keyframes blink{ 50% { opacity:0; } }
+
+    #projects-container.refreshing{ position:relative; animation: pulse .9s ease-in-out infinite; opacity:.7 }
+    @keyframes pulse{ 50%{ opacity:.4 } }
 
     a{ color: var(--accent); text-decoration:none; border-bottom:1px dashed transparent; transition: border-color .2s ease, color .2s ease; }
     a:focus-visible{ outline:2px solid var(--accent2); outline-offset:3px; border-radius:4px; }

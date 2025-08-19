@@ -8,17 +8,12 @@
   
   const CONFIG = {
     JSON_URL: '/projects.json',
-    TYPING_SPEED: 22,
+    TYPING_SPEED: 80,
     CACHE_DURATION: 5 * 60 * 1000, // 5 minutes
   };
   
-  // Cache DOM elements
-  const elements = {
-    screen: document.getElementById('screen'),
-    updatedAt: document.getElementById('updatedAt'),
-    refreshBtn: document.getElementById('refreshBtn')
-  };
-  
+  let elements = {};
+
   // Cache for projects data
   let projectsCache = {
     data: null,
@@ -36,17 +31,11 @@
     }
   };
 
-  function createLine(content, cls = '') {
-    const div = document.createElement('div');
-    div.className = `line ${cls}`;
-    div.innerHTML = content;
-    elements.screen.appendChild(div);
-    elements.screen.scrollTop = elements.screen.scrollHeight;
-    return div;
-  }
-
   function typeText(target, text, speed = CONFIG.TYPING_SPEED) {
     return new Promise(resolve => {
+      const originalText = target.textContent;
+      target.textContent = '';
+      
       let i = 0;
       const cursor = document.createElement('span');
       cursor.className = 'cursor blink';
@@ -58,6 +47,7 @@
         } else {
           clearInterval(typeInterval);
           cursor.remove();
+          target.textContent = originalText;
           resolve();
         }
         elements.screen.scrollTop = elements.screen.scrollHeight;
@@ -132,52 +122,59 @@
     elements.updatedAt.textContent = text;
   }
 
-  function clearScreen() {
-    elements.screen.innerHTML = '';
+  function getTerminalLines() {
+    const screen = elements.screen;
+    if (!screen) return { lines: [], cmds: [] };
+    const lines = Array.from(screen.querySelectorAll('.line'));
+    const cmds = [elements.cmdWhoami, elements.cmdEcho, elements.cmdLs].filter(Boolean);
+    return { lines, cmds };
   }
 
-  async function printSession() {
-    clearScreen();
+  function revealLine(el) {
+    if (el) el.classList.add('revealed');
+  }
 
+  async function loadProjects() {
     try {
-      let el = createLine(`<span class="prompt">$</span> <span class="command"></span>`);
-      await typeText(el.querySelector('.command'), 'whoami');
-      createLine('<span class="output">shedrack@sheddy.work</span>');
-
-      el = createLine(`<span class="prompt">$</span> <span class="command"></span>`);
-      await typeText(el.querySelector('.command'), 'echo "DevOps playground"');
-      createLine('<span class="output">DevOps playground</span>');
-
-      el = createLine(`<span class="prompt">$</span> <span class="command"></span>`);
-      await typeText(el.querySelector('.command'), 'ls');
-
       const { list: projects, ts, error } = await fetchProjects();
+
+      elements.projectsContainer.innerHTML = '';
 
       if (projects === null) {
         const errorMsg = error ? `(${error})` : '(could not load projects.json)';
-        createLine(`<span class="output">${errorMsg}</span>`);
-        createLine('<span class="output">no projects yet — check back soon</span>');
+        elements.projectsContainer.innerHTML = `<div>${errorMsg}</div><div>no projects yet — check back soon</div>`;
         setUpdated(ts, 'fetch error');
       } else if (projects.length === 0) {
-        createLine('<span class="output">no projects yet — check back soon</span>');
+        elements.projectsContainer.innerHTML = '<div>no projects yet — check back soon</div>';
         setUpdated(ts);
       } else {
         renderProjects(projects);
         setUpdated(ts);
       }
-
-      // Final prompt
-      createLine(`<span class="prompt">$</span> <span class="blink cursor" aria-hidden="true"></span>`);
+      elements.projectsContainer.classList.remove('refreshing');
+      elements.projectsContainer.style.transition = 'filter .2s ease';
+      elements.projectsContainer.style.filter = 'brightness(1.2)';
+      setTimeout(() => { elements.projectsContainer.style.filter = 'none'; }, 180);
     } catch (err) {
-      console.error('Error in printSession:', err);
-      createLine('<span class="output">An error occurred while loading the terminal</span>');
+      console.error('Error loading projects:', err);
+      elements.projectsContainer.innerHTML = '<div>An error occurred while loading projects</div>';
+      elements.projectsContainer.classList.remove('refreshing');
     }
   }
 
+  async function playTypingAnimation() {
+    const speed = CONFIG.TYPING_SPEED;
+    const { lines } = getTerminalLines();
+    // Reveal up to the first command line
+    revealLine(lines[0]);
+    await typeText(elements.cmdWhoami, 'whoami', speed); revealLine(lines[1]);
+    revealLine(lines[2]);
+    await typeText(elements.cmdEcho, 'echo "DevOps playground"', speed); revealLine(lines[3]);
+    revealLine(lines[4]);
+    await typeText(elements.cmdLs, 'ls', speed); revealLine(lines[5]);
+  }
+
   function renderProjects(projects) {
-    const container = document.createElement('div');
-    container.className = 'line output';
-    
     const fragment = document.createDocumentFragment();
     
     projects.forEach(project => {
@@ -192,8 +189,7 @@
       fragment.appendChild(row);
     });
     
-    container.appendChild(fragment);
-    elements.screen.appendChild(container);
+    elements.projectsContainer.appendChild(fragment);
   }
 
   // Debounce function to prevent rapid calls
@@ -209,7 +205,13 @@
     };
   }
 
-  const debouncedRefresh = debounce(printSession, 300);
+  async function refreshProjects() {
+    elements.projectsContainer.classList.add('refreshing');
+    projectsCache.clear();
+    await loadProjects();
+  }
+
+  const debouncedRefresh = debounce(refreshProjects, 300);
 
   function onKeydown(e) {
     if (e.key.toLowerCase() === 'r') {
@@ -218,8 +220,19 @@
     }
   }
 
-  function init() {
-    if (!elements.screen || !elements.updatedAt || !elements.refreshBtn) {
+  async function init() {
+    elements = {
+      screen: document.getElementById('screen'),
+      projectsContainer: document.getElementById('projects-container'),
+      updatedAt: document.getElementById('updatedAt'),
+      refreshBtn: document.getElementById('refreshBtn'),
+      cmdWhoami: document.getElementById('cmd-whoami'),
+      cmdEcho: document.getElementById('cmd-echo'),
+      cmdLs: document.getElementById('cmd-ls'),
+      finalCursor: document.getElementById('final-cursor')
+    };
+
+    if (!elements.projectsContainer) {
       console.error('Required DOM elements not found');
       return;
     }
@@ -227,7 +240,10 @@
     elements.refreshBtn.addEventListener('click', debouncedRefresh);
     window.addEventListener('keydown', onKeydown);
 
-    setTimeout(printSession, 250);
+    // Start with all lines hidden (CSS), then reveal progressively
+    await playTypingAnimation();
+    await loadProjects();
+    if (elements.finalCursor) elements.finalCursor.classList.add('blink');
   }
 
   // Initialize when DOM is ready
