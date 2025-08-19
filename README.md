@@ -28,6 +28,6 @@ npx http-server -p 8080
 Then visit http://localhost:8080/.
 
 
-License
+## License
 
 MIT © Shedrack Akintayo
