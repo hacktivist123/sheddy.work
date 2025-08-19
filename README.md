@@ -1,7 +1,7 @@
 # sheddy.work
 
 
-A terminal-style homepage for sheddy.work that auto-discovers project subdomains from a `projects.json` file.
+A terminal-style homepage for my personal projects that auto-discovers project domains & subdomains from a `projects.json` file.
 
 
 ## Features
